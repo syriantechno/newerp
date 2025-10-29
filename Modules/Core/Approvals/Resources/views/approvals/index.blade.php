@@ -6,6 +6,8 @@
             <div class="col">
                 <h4 class="text-gradient text-primary">🧾 Approvals Management</h4>
                 <p class="text-muted">Track and manage all approval requests across modules</p>
+                <a href="{{ route('approvals.create') }}" class="btn btn-primary btn-sm">➕ Add Approval</a>
+
             </div>
         </div>
 
@@ -18,6 +20,7 @@
                         <th>Module</th>
                         <th>Record ID</th>
                         <th>Status</th>
+                        <th>Steps</th>
                         <th>Created By</th>
                         <th>Created At</th>
                         <th>Actions</th>
@@ -34,10 +37,13 @@
                                     <span class="badge bg-gradient-success">Approved</span>
                                 @elseif($approval->status == 'rejected')
                                     <span class="badge bg-gradient-danger">Rejected</span>
+                                @elseif($approval->status === 'in_progress')
+                                    <span class="badge bg-warning text-dark">In Progress</span>
                                 @else
                                     <span class="badge bg-gradient-warning">Pending</span>
                                 @endif
                             </td>
+                            <td>{{ $approval->steps_count }}</td>
                             <td>{{ $approval->created_by }}</td>
                             <td>{{ $approval->created_at->format('Y-m-d H:i') }}</td>
                             <td>

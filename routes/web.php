@@ -94,3 +94,7 @@ Route::get('/login', function () {
     return view('session/login-session');
 })->name('login');
 require base_path('Modules/Core/Approvals/Routes/web.php');
+Route::get('/_ping', function () {
+    return 'Laravel OK from main project';
+});
+
