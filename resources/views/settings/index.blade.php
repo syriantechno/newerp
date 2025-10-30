@@ -20,11 +20,12 @@
                                     <i class="ni ni-app text-warning me-2"></i> Modules Manager
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ $activeTab === 'messages' ? 'active' : '' }}" href="#messages" data-bs-toggle="tab">
-                                    <i class="ni ni-email-83 text-sm me-2"></i> Messages
+                            <li class="nav-item mb-2">
+                                <a href="#" class="nav-link" data-section="messages">
+                                    <i class="ni ni-email-83 text-primary me-2"></i> Messages
                                 </a>
                             </li>
+
                             <li class="nav-item mb-2">
                                 <a href="#" class="nav-link" data-section="notifications">
                                     <i class="ni ni-bell-55 text-success me-2"></i> Notifications
@@ -115,9 +116,9 @@
                                     <td>{{ $mod->label }}</td>
                                     <td><i class="{{ $mod->icon }}"></i></td>
                                     <td>
-                    <span class="badge {{ $mod->active ? 'bg-success' : 'bg-secondary' }}">
+                       <span class="badge {{ $mod->active ? 'bg-success' : 'bg-secondary' }}">
                         {{ $mod->active ? 'Active' : 'Disabled' }}
-                    </span>
+                       </span>
                                     </td>
                                     <td>{{ $mod->order }}</td>
                                     <td>
@@ -131,8 +132,9 @@
                         </table>
 
                     </div>
-                    <div class="tab-pane fade {{ $activeTab === 'messages' ? 'show active' : '' }}" id="messages">
-                        <div class="card shadow-sm border-0">
+                    <div class="card-body p-4 d-none" id="settings-section-messages">
+
+                    <div class="card shadow-sm border-0">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0">🗂 Message Templates</h6>
                                 <button type="submit" form="messagesForm" class="btn btn-primary btn-sm">💾 Save</button>
@@ -167,23 +169,86 @@
                             </div>
                         </div>
                     </div>
-
-
                     <div class="card-body p-4 d-none" id="settings-section-notifications">
                         <h5><i class="ni ni-bell-55 text-success me-2"></i> Notifications</h5>
                         <p class="text-sm text-muted">Configure audio alerts, email preferences, and notification behavior.</p>
                     </div>
-
                     <div class="card-body p-4 d-none" id="settings-section-users">
-                        <h5><i class="ni ni-single-02 text-info me-2"></i> Users & Roles</h5>
-                        <p class="text-sm text-muted">Manage roles and permissions.</p>
-                    </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="ni ni-single-02 text-info me-2"></i> Users & Roles</h5>
+                            <a href="{{ route('settings.roles.index') }}" class="btn btn-outline-primary btn-sm">
+                                ⚙️ Manage Roles
+                            </a>
+                        </div>
 
+                        <p class="text-sm text-muted mb-3">
+                            View all system users and assign roles directly.
+                        </p>
+
+                        @php
+                            use App\Models\User;
+                            use App\Models\Role;
+                            $users = User::with('roles')->orderBy('id')->get();
+                            $roles = Role::orderBy('name')->get();
+                        @endphp
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="bg-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Current Role</th>
+                                    <th class="text-end">Assign Role</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($users as $u)
+                                    <tr>
+                                        <td>{{ $u->id }}</td>
+                                        <td>{{ $u->name }}</td>
+                                        <td>{{ $u->email }}</td>
+                                        <td>
+                                            @if($u->roles->isEmpty())
+                                                <span class="badge bg-secondary">None</span>
+                                            @else
+                                                @foreach($u->roles as $r)
+                                                    <span class="badge bg-info text-dark">{{ $r->name }}</span>
+                                                @endforeach
+                                            @endif
+                                        </td>
+                                        <td class="text-end">
+                                            <form method="POST" action="{{ route('settings.users.assignRole') }}" class="d-flex justify-content-end gap-2">
+                                                @csrf
+                                                <input type="hidden" name="user_id" value="{{ $u->id }}">
+                                                <select name="role_id" class="form-select form-select-sm w-auto">
+                                                    @foreach($roles as $r)
+                                                        <option value="{{ $r->id }}" {{ $u->roles->contains('id', $r->id) ? 'selected' : '' }}>
+                                                            {{ $r->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-success">Assign</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <hr>
+                        <div class="text-end">
+                            <a href="{{ route('settings.permissions.matrix') }}" class="btn btn-outline-success btn-sm">
+                                🔐 Permissions Matrix
+                            </a>
+                        </div>
+                    </div>
                     <div class="card-body p-4 d-none" id="settings-section-appearance">
                         <h5><i class="ni ni-palette text-danger me-2"></i> Appearance</h5>
                         <p class="text-sm text-muted">Theme and layout customization options.</p>
                     </div>
-
                     <div class="card-body p-4 d-none" id="settings-section-system">
                         <h5><i class="ni ni-laptop text-dark me-2"></i> System Info</h5>
                         <p class="text-sm text-muted">System version, PHP info, and diagnostics.</p>

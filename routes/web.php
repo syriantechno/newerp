@@ -14,7 +14,10 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ModulesSyncController;
 use App\Http\Controllers\ModuleToggleController;
 use App\Http\Controllers\Settings\MessagesController;
+use App\Http\Controllers\Settings\Rbac\RoleController;
+use App\Http\Controllers\Settings\Rbac\PermissionMatrixController;
 
+use App\Http\Controllers\Settings\UserRoleController;
 
 
 
@@ -156,4 +159,45 @@ Route::middleware(['web', 'auth'])->group(function () {
 Route::get('/notifications/check', [App\Http\Controllers\NotificationController::class, 'checkNew'])
     ->middleware('auth')
     ->name('notifications.check');
+
+Route::middleware(['web', 'auth'])->group(function () {
+
+    // 🔧 صفحة الإعدادات الرئيسية
+    Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])
+        ->name('settings.index');
+
+    // 🧩 نظام الأدوار والصلاحيات (Roles & Permissions)
+    Route::prefix('settings')->name('settings.')->group(function () {
+
+        // Roles CRUD
+        Route::get('/roles', [RoleController::class, 'index'])
+            ->name('roles.index')
+            ->middleware('perm:settings,view');
+
+        Route::post('/roles', [RoleController::class, 'store'])
+            ->name('roles.store')
+            ->middleware('perm:settings,add');
+
+        Route::put('/roles/{role}', [RoleController::class, 'update'])
+            ->name('roles.update')
+            ->middleware('perm:settings,edit');
+
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])
+            ->name('roles.destroy')
+            ->middleware('perm:settings,delete');
+
+        // Permissions Matrix
+        Route::get('/permissions/matrix/{role?}', [PermissionMatrixController::class, 'index'])
+            ->name('permissions.matrix')
+            ->middleware('perm:settings,view');
+
+        Route::post('/permissions/matrix/{role}', [PermissionMatrixController::class, 'sync'])
+            ->name('permissions.sync')
+            ->middleware('perm:settings,edit');
+
+        Route::post('/users/assign-role', [UserRoleController::class, 'assign'])
+            ->name('users.assignRole')
+            ->middleware(['auth','perm:settings,edit']);
+    });
+});
 

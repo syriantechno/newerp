@@ -4,7 +4,8 @@
         <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
            aria-hidden="true" id="iconSidenav"></i>
         <a class="align-items-center d-flex m-0 navbar-brand text-wrap" href="{{ route('dashboard') }}">
-            <img src="../assets/img/logo-ct.png" class="navbar-brand-img h-100" alt="...">
+            <img src="{{ asset('assets/img/logo-ct.png') }}"
+                 class="navbar-brand-img h-100" alt="...">
             <span class="ms-3 font-weight-bold">Soft UI Dashboard Laravel</span>
         </a>
     </div>
@@ -325,7 +326,8 @@
     <div class="sidenav-footer mx-3 ">
         <div class="card card-background shadow-none card-background-mask-secondary" id="sidenavCard">
             <div class="full-background"
-                 style="background-image: url('../assets/img/curved-images/white-curved.jpeg')"></div>
+                 style="background-image: url('{{ asset('assets/img/curved-images/white-curved.jpeg') }}');"
+            ></div>
             <div class="card-body text-start p-3 w-100">
                 <div
                     class="icon icon-shape icon-sm bg-white shadow text-center mb-3 d-flex align-items-center justify-content-center border-radius-md">
