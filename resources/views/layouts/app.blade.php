@@ -40,7 +40,11 @@
             <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
             <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
             <!-- Font Awesome Icons -->
-            <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+            <link
+                rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css"
+            />
+
             <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
             <!-- CSS Files -->
             <link id="pagestyle" href="../assets/css/soft-ui-dashboard.css?v=1.0.3" rel="stylesheet" />
@@ -85,6 +89,62 @@
         <script async defer src="https://buttons.github.io/buttons.js"></script>
         <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
         <script src="../assets/js/soft-ui-dashboard.min.js?v=1.0.3"></script>
+
+
+        @if (session('success') || session('error'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const body = document.querySelector('body');
+                    const toast = document.createElement('div');
+                    toast.className = 'position-fixed top-2 end-0 p-3';
+                    toast.style.zIndex = '9999';
+                    toast.innerHTML = `
+    <div class="toast align-items-center text-white {{ session('success') ? 'bg-success' : 'bg-danger' }} border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          {{ session('success') ?? session('error') }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                  </div>
+                </div>
+`;
+                    body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 4000);
+                });
+            </script>
+        @endif
+        <script>
+            let lastNotificationId = localStorage.getItem('last_notification_id') || 0;
+            const sound = new Audio('/sounds/notify.wav');
+            sound.volume = 0.7;
+
+            // Unlock audio on first user action
+            document.addEventListener('click', () => {
+                sound.play().then(() => sound.pause());
+                console.log('🔊 Audio unlocked');
+            }, { once: true });
+
+            async function checkNotifications() {
+                try {
+                    const res = await fetch(`/notifications/check?last_id=${lastNotificationId}`);
+                    const data = await res.json();
+                    if (data.new) {
+                        await sound.play();
+                        lastNotificationId = data.id;
+                        localStorage.setItem('last_notification_id', data.id);
+                        console.log('🔔 New notification:', data.title);
+                    }
+                } catch (err) {
+                    console.error('Notification check failed:', err);
+                }
+            }
+
+            setInterval(checkNotifications, 5000);
+        </script>
+
+
+
+
         </body>
 
         </html>

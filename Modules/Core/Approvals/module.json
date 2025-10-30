@@ -1,0 +1,8 @@
+{
+    "name": "Approvals",
+    "label": "Approval Requests",
+    "icon": "ni ni-check-bold",
+    "route": "approvals.index",
+    "active": true,
+    "order": 1
+}

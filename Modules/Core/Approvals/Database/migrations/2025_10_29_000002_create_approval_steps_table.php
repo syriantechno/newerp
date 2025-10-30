@@ -5,25 +5,23 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up(): void {
+    public function up(): void
+    {
         Schema::create('approval_steps', function (Blueprint $table) {
-            $table->engine = 'InnoDB';
             $table->id();
-            $table->unsignedBigInteger('approval_id');
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->integer('step_order')->default(1);
-            $table->string('status')->default('pending');
-            $table->text('notes')->nullable();
+            $table->foreignId('approval_id')->constrained('approvals')->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedInteger('step_order'); // ✅ اسم واضح لتجنب تضارب كلمة order
+            $table->enum('status', ['waiting', 'pending', 'approved', 'rejected'])->default('waiting');
             $table->timestamps();
 
-            $table->foreign('approval_id')
-                ->references('id')
-                ->on('approvals')
-                ->onDelete('cascade');
+            $table->index(['approval_id','step_order']);
+            $table->unique(['approval_id','step_order']); // كل خطوة ترتيب فريد داخل نفس الموافقة
         });
     }
 
-    public function down(): void {
+    public function down(): void
+    {
         Schema::dropIfExists('approval_steps');
     }
 };

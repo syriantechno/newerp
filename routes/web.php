@@ -10,6 +10,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Settings\CustomFieldController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ModulesSyncController;
+use App\Http\Controllers\ModuleToggleController;
+use App\Http\Controllers\Settings\MessagesController;
+
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +28,27 @@ use App\Http\Controllers\Settings\CustomFieldController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::middleware(['auth'])->group(function () {
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+});
 
+Route::middleware(['auth'])->group(function () {
+    Route::post('/settings/modules/sync', [ModulesSyncController::class, 'sync'])
+        ->name('modules.sync');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/settings/modules/toggle/{id}', [ModuleToggleController::class, 'toggle'])
+        ->name('modules.toggle');
+});
+
+Route::middleware(['web', 'auth'])->group(function () {
+    // صفحة الإعدادات نفسها
+    Route::get('settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+
+    // حفظ تعديلات الرسائل
+    Route::post('settings/messages/save', [MessagesController::class, 'save'])->name('settings.messages.save');
+});
 
 Route::group(['middleware' => 'auth'], function () {
 
@@ -97,4 +124,36 @@ require base_path('Modules/Core/Approvals/Routes/web.php');
 Route::get('/_ping', function () {
     return 'Laravel OK from main project';
 });
+
+Route::middleware(['web', 'auth'])->group(function () {
+
+    // عرض جميع الإشعارات
+    Route::get('/notifications', function () {
+        $notifications = \DB::table('notifications')
+            ->where('user_id', auth()->id())
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('notifications.index', compact('notifications'));
+    })->name('notifications.index');
+
+    // تحديد كمقروء
+    Route::post('/notifications/read', function (Request $request) {
+        \DB::table('notifications')
+            ->where('user_id', auth()->id())
+            ->update(['is_read' => true]);
+        return back()->with('success', 'All notifications marked as read.');
+    })->name('notifications.read');
+
+    // حذف الكل
+    Route::post('/notifications/delete', function (Request $request) {
+        \DB::table('notifications')
+            ->where('user_id', auth()->id())
+            ->delete();
+        return back()->with('success', 'All notifications deleted.');
+    })->name('notifications.delete');
+});
+Route::get('/notifications/check', [App\Http\Controllers\NotificationController::class, 'checkNew'])
+    ->middleware('auth')
+    ->name('notifications.check');
 

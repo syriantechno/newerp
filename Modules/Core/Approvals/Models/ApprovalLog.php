@@ -3,21 +3,22 @@
 namespace Modules\Core\Approvals\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\User;
 
 class ApprovalLog extends Model
 {
-    protected $fillable = [
-        'approval_id', 'user_id', 'action', 'comment'
-    ];
+    protected $table = 'approval_logs';
 
-    public function approval()
+    protected $fillable = ['approval_id', 'user_id', 'action', 'comment'];
+
+    public function approval(): BelongsTo
     {
         return $this->belongsTo(Approval::class);
     }
-    public function user()
+
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
-
-
 }

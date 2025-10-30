@@ -1,0 +1,86 @@
+diff --git a/Modules/Core/Approvals/Http/Controllers/ApprovalController.php b/Modules/Core/Approvals/Http/Controllers/ApprovalController.php
+index 1234567..89abcde 100644
+--- a/Modules/Core/Approvals/Http/Controllers/ApprovalController.php
++++ b/Modules/Core/Approvals/Http/Controllers/ApprovalController.php
+@@ public function store(Request $request)
+-    // ✅ بعد نجاح الحفظ تماماً
+-    notify_user(
+-        auth()->id(),
+-        'New Approval Created',
+-        'Your approval request was successfully submitted.',
+-        route('approvals.show', $approval->id)
+-    );
+-
+-    return redirect()->route('approvals.index')->with('success', 'Approval created successfully.');
++    // ✅ بعد نجاح الحفظ تماماً (نظام الرسائل الموحد)
++    notify_user(
++        auth()->id(),
++        msg('approvals.created'),
++        msg('system.success'),
++        route('approvals.show', $approval->id)
++    );
++
++    return redirect()
++        ->route('approvals.index')
++        ->with('success', msg('approvals.created'));
+@@ public function action(Request $request, $id)
+-    if (!$currentStep) {
+-        return back()->with('error', 'No active approval step for you.');
+-    }
++    if (!$currentStep) {
++        return back()->with('error', msg('system.unauthorized'));
++    }
+@@
+-                // ✅ إشعار المستخدم التالي
+-                if ($nextStep->user_id) {
+-                    notify_user(
+-                        $nextStep->user_id,
+-                        'Approval Request Assigned',
+-                        'A new approval request now requires your review.',
+-                        route('approvals.show', $approval->id)
+-                    );
+-                }
++                // ✅ إشعار المستخدم التالي (نظام الرسائل الموحد)
++                if ($nextStep->user_id) {
++                    notify_user(
++                        $nextStep->user_id,
++                        msg('approvals.assigned'),
++                        msg('notifications.new'),
++                        route('approvals.show', $approval->id)
++                    );
++                }
+@@
+-                // ✅ إشعار منشئ الطلب بأن الطلب تم اعتماده بالكامل
+-                notify_user(
+-                    $approval->logs()->first()->user_id,
+-                    'Approval Completed',
+-                    'Your approval request has been fully approved.',
+-                    route('approvals.show', $approval->id)
+-                );
++                // ✅ إشعار منشئ الطلب بأن الطلب تم اعتماده بالكامل
++                notify_user(
++                    $approval->logs()->first()->user_id,
++                    msg('approvals.approved'),
++                    msg('system.success'),
++                    route('approvals.show', $approval->id)
++                );
+@@
+-            // إشعار منشئ الطلب بالرفض
+-            notify_user(
+-                $approval->logs()->first()->user_id,
+-                'Approval Rejected',
+-                'Your approval request has been rejected.',
+-                route('approvals.show', $approval->id)
+-            );
++            // ✅ إشعار منشئ الطلب بالرفض
++            notify_user(
++                $approval->logs()->first()->user_id,
++                msg('approvals.rejected'),
++                msg('system.error'),
++                route('approvals.show', $approval->id)
++            );
+@@
+-    return redirect()->route('approvals.show', $id)->with('success', 'Action recorded successfully.');
++    return redirect()
++        ->route('approvals.show', $id)
++        ->with('success', msg('approvals.action_recorded'));

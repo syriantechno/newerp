@@ -7,4 +7,6 @@ Route::middleware('web')->prefix('hr')->group(function () {
     Route::get('/', [EmployeeController::class, 'index'])->name('hr.employees.index');
     Route::get('/create', [EmployeeController::class, 'create'])->name('hr.employees.create');
     Route::post('/store', [EmployeeController::class, 'store'])->name('hr.employees.store');
+    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+
 });
