@@ -1,27 +1,36 @@
-@if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+@if (session()->has('success') || session()->has('error') || session()->has('warning') || session()->has('info'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const messages = {
+                success: @json(session('success')),
+                error: @json(session('error')),
+                warning: @json(session('warning')),
+                info: @json(session('info'))
+            };
 
-@if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+            const colors = {
+                success: 'bg-gradient-success',
+                error: 'bg-gradient-danger',
+                warning: 'bg-gradient-warning',
+                info: 'bg-gradient-info'
+            };
 
-@if (session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        {{ session('warning') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
-@if (session('info'))
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        {{ session('info') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+            Object.keys(messages).forEach(type => {
+                if (!messages[type]) return;
+                const toast = document.createElement('div');
+                toast.className = 'position-fixed bottom-0 end-0 p-3';
+                toast.style.zIndex = 9999;
+                toast.innerHTML = `
+                    <div class="toast align-items-center text-white ${colors[type]} border-0 show mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">${messages[type]}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
+            });
+        });
+    </script>
 @endif
