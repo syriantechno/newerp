@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\HR\Http\Controllers\EmployeesController;
+use Modules\HR\Http\Controllers\AttendanceController;
+use Modules\HR\Http\Controllers\DepartmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,8 +47,21 @@ Route::middleware(['web', 'auth'])
         Route::view('/designations', 'hr::placeholder')->name('hr.designations.index');
         Route::view('/companies', 'hr::placeholder')->name('hr.companies.index');
         Route::view('/shifts', 'hr::placeholder')->name('hr.shifts.index');
+        Route::resource('departments', DepartmentController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->names('hr.departments');
 
 
+    });
+Route::middleware(['web','auth'])
+    ->prefix('hr/attendance')
+    ->name('hr.attendance.')
+    ->group(function () {
+        Route::get('/',        [AttendanceController::class, 'index'])->name('index');
+        Route::get('/filter',  [AttendanceController::class, 'filter'])->name('filter'); // AJAX
+        Route::post('/mark',   [AttendanceController::class, 'mark'])->name('mark');
+        Route::post('/import', [AttendanceController::class, 'import'])->name('import');
+        Route::get('/export',  [AttendanceController::class, 'export'])->name('export');
     });
 
 // Safe debug output for confirmation
