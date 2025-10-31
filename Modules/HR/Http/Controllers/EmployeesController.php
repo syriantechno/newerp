@@ -2,149 +2,192 @@
 
 namespace Modules\HR\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Modules\HR\Models\Employee;
-use Modules\HR\Models\Department;
-use Modules\HR\Models\Designation;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\View;
+use Modules\HR\Entities\Employee;
+use Modules\HR\Entities\Company;
+use Modules\HR\Entities\Department;
+use Modules\HR\Entities\Designation;
 
 class EmployeesController extends Controller
 {
-    /**
-     * Display the main employees page.
-     */
-    public function index()
+    private function buildEmployeeQuery(Request $request)
     {
-        return view('hr::employees.index');
+        Log::debug('[DEBUG] EmployeesController@buildEmployeeQuery');
+
+        $q = Employee::query();
+
+        if ($request->filled('company_id')) {
+            $q->where('company_id', $request->company_id);
+        }
+        if ($request->filled('department_id')) {
+            $q->where('department_id', $request->department_id);
+        }
+        if ($request->filled('designation_id')) {
+            $q->where('designation_id', $request->designation_id);
+        }
+        if ($request->filled('status')) {
+            $q->where('status', $request->status);
+        }
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $q->where(function ($qq) use ($s) {
+                $qq->where('name', 'like', "%{$s}%")
+                    ->orWhere('email', 'like', "%{$s}%")
+                    ->orWhere('emp_code', 'like', "%{$s}%");
+            });
+        }
+
+        return $q->orderBy('id', 'desc');
     }
 
-    /**
-     * Return JSON data for DataTable.
-     */
-    public function table()
+    public function index(Request $request)
     {
-        $employees = Employee::with(['department:id,name', 'designation:id,name'])
-            ->orderByDesc('id')
-            ->get();
+        Log::debug('[DEBUG] EmployeesController@index called');
 
-        return response()->json(['data' => $employees]);
+        $companies = Company::orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
+        $designations = Designation::orderBy('name')->get();
+
+        $employees = $this->buildEmployeeQuery($request)
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('hr::employees.index', compact(
+            'employees',
+            'companies',
+            'departments',
+            'designations'
+        ));
     }
 
-    /**
-     * Store a new employee via AJAX.
-     */
+    public function filter(Request $request)
+    {
+        Log::debug('[DEBUG] EmployeesController@filter called (AJAX)');
+
+        $employees = $this->buildEmployeeQuery($request)
+            ->paginate(10)
+            ->withQueryString();
+
+        $tbodyHtml = View::make('hr::employees.partials.table', [
+            'employees' => $employees
+        ])->render();
+
+        $paginationHtml = View::make('hr::employees.partials.pagination', [
+            'employees' => $employees
+        ])->render();
+
+        $summaryHtml = View::make('hr::employees.partials.summary', [
+            'count' => $employees->total(),
+            'filters' => [
+                'company_id' => $request->company_id,
+                'department_id' => $request->department_id,
+                'designation_id' => $request->designation_id,
+                'status' => $request->status,
+                'search' => $request->search,
+            ]
+        ])->render();
+
+        return response()->json([
+            'ok' => true,
+            'tbody' => $tbodyHtml,
+            'pagination' => $paginationHtml,
+            'summary' => $summaryHtml,
+            'total' => $employees->total(),
+        ]);
+    }
+
+    public function create()
+    {
+        Log::debug('[DEBUG] EmployeesController@create called');
+        $companies = Company::all();
+        $departments = Department::all();
+        $designations = Designation::all();
+
+        return view('hr::employees.create', compact('companies', 'departments', 'designations'));
+    }
+
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email|unique:hr_employees,email',
-            'company_id'    => 'required|integer|exists:hr_companies,id',
+        Log::debug('[DEBUG] EmployeesController@store called', $request->all());
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'company_id' => 'nullable|integer',
             'department_id' => 'nullable|integer',
-            'designation_id'=> 'nullable|integer',
-            'status'        => 'nullable|string',
-            'join_date'     => 'nullable|date',
-            'notes'         => 'nullable|string',
+            'designation_id' => 'nullable|integer',
+            'status' => 'nullable|string|max:20',
+            'join_date' => 'nullable|date',
+            'notes' => 'nullable|string',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
+        $employee = Employee::create($validated);
+        Log::debug('[DEBUG] Employee created ID=' . $employee->id);
 
-        try {
-            // 🔹 توليد رقم موظف تلقائي فريد مثل EMP-0001
-            $lastId = \Modules\HR\Entities\Employee::max('id') ?? 0;
-            $empCode = 'EMP-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
-
-            $employee = \Modules\HR\Entities\Employee::create([
-                'emp_code'      => $empCode, // ✅ توليد تلقائي
-                'name'          => $request->name,
-                'email'         => $request->email,
-                'company_id'    => $request->company_id,
-                'department_id' => $request->department_id,
-                'designation_id'=> $request->designation_id,
-                'status'        => $request->status ?? 'active',
-                'join_date'     => $request->join_date,
-                'notes'         => $request->notes,
-            ]);
-
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'Employee added successfully!',
-                'data'    => $employee,
-            ]);
-        } catch (\Throwable $e) {
-            \Log::error('[EmployeeStore] '.$e->getMessage());
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Failed to save employee: '.$e->getMessage(),
-            ], 500);
-
-
-        \Log::error('[EmployeeStore] '.$e->getMessage());
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Failed to save employee: '.$e->getMessage(),
-            ], 500);
-        }
+        return redirect()->route('hr.employees.index')
+            ->with('success', 'Employee created successfully.');
     }
 
-
-    /**
-     * Update an existing employee.
-     */
-    public function update(Request $request, Employee $employee)
+    public function show($id)
     {
-        $validator = Validator::make($request->all(), [
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email|unique:hr_employees,email,' . $employee->id,
-            'department_id' => 'nullable|integer',
-            'designation_id'=> 'nullable|integer',
-            'status'        => 'nullable|string',
-            'join_date'     => 'nullable|date',
-            'notes'         => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors()
-            ], 422);
-        }
-
-        $employee->update($validator->validated());
-
-        return response()->json([
-            'success'  => true,
-            'message'  => 'Employee updated successfully',
-            'employee' => $employee
-        ]);
+        Log::debug("[DEBUG] EmployeesController@show called for ID={$id}");
+        $employee = Employee::findOrFail($id);
+        return view('hr::employees.show', compact('employee'));
     }
 
-    /**
-     * Delete an employee.
-     */
-    public function destroy(Employee $employee)
+    public function edit($id)
     {
+        Log::debug("[DEBUG] EmployeesController@edit called for ID={$id}");
+
+        $employee = Employee::findOrFail($id);
+        $companies = Company::all();
+        $departments = Department::all();
+        $designations = Designation::all();
+
+        return view('hr::employees.edit', compact(
+            'employee',
+            'companies',
+            'departments',
+            'designations'
+        ));
+    }
+
+    public function update(Request $request, $id)
+    {
+        Log::debug("[DEBUG] EmployeesController@update called for ID={$id}", $request->all());
+
+        $employee = Employee::findOrFail($id);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'company_id' => 'nullable|integer',
+            'department_id' => 'nullable|integer',
+            'designation_id' => 'nullable|integer',
+            'status' => 'nullable|string|max:20',
+            'join_date' => 'nullable|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        $employee->update($validated);
+        Log::debug('[DEBUG] Employee updated ID=' . $employee->id);
+
+        return redirect()->route('hr.employees.index')
+            ->with('success', 'Employee updated successfully.');
+    }
+
+    public function destroy($id)
+    {
+        Log::debug("[DEBUG] EmployeesController@destroy called for ID={$id}");
+
+        $employee = Employee::findOrFail($id);
         $employee->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Employee deleted successfully'
-        ]);
-    }
+        Log::debug('[DEBUG] Employee deleted ID=' . $id);
 
-    /**
-     * Return dropdown lists for Departments & Designations (used in modal)
-     */
-    public function dropdowns()
-    {
-        return response()->json([
-            'departments'  => Department::select('id', 'name')->get(),
-            'designations' => Designation::select('id', 'name')->get(),
-        ]);
+        return redirect()->route('hr.employees.index')
+            ->with('success', 'Employee deleted successfully.');
     }
 }

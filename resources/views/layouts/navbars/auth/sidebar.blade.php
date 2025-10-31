@@ -92,34 +92,40 @@
 
             @foreach(($autoModules ?? []) as $mod)
                 @php
-                    // استخرج الاسم بأمان من المصفوفة أو الكائن
                     $rawRoute = $mod['route'] ?? ($mod->route ?? '');
                     $routeKey = (string) Str::of($rawRoute)->trim();
-
-                    // تحقّق إن المسار فعلاً موجود
                     $routeExists = RouteFacade::has($routeKey);
+
+                    // Extract module name safely from route (like 'hr.employees.index' → 'hr')
+                    $moduleName = Str::before($routeKey, '.');
                 @endphp
 
-                <li class="nav-item">
-                    @if($routeExists)
-                        <a class="nav-link {{ request()->routeIs($routeKey) ? 'active' : '' }}"
-                           href="{{ route($routeKey) }}">
-                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
-                                <i class="{{ $mod['icon'] ?? 'ni ni-bullet-list-67' }} text-dark text-sm opacity-10"></i>
-                            </div>
-                            <span class="nav-link-text ms-1">{{ $mod['label'] ?? 'Module' }}</span>
-                        </a>
-                    @else
-                        {{-- إذا ما وُجد المسار، لا تكسر الصفحة --}}
-                        <a class="nav-link text-danger" href="javascript:void(0)" title="Missing route: {{ $routeKey }}">
-                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
-                                <i class="{{ $mod['icon'] ?? 'ni ni-bullet-list-67' }} text-dark text-sm opacity-10"></i>
-                            </div>
-                            <span class="nav-link-text ms-1">{{ $mod['label'] ?? 'Module' }}</span>
-                        </a>
-                    @endif
-                </li>
+                {{-- إذا عند الموديول ملف sidebar خاص، نعرضه --}}
+                @if (View::exists($moduleName.'::sidebar'))
+                    @include($moduleName.'::sidebar')
+                @else
+                    {{-- otherwise show normal single link --}}
+                    <li class="nav-item">
+                        @if($routeExists)
+                            <a class="nav-link {{ request()->routeIs($routeKey) ? 'active' : '' }}"
+                               href="{{ route($routeKey) }}">
+                                <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="{{ $mod['icon'] ?? 'ni ni-bullet-list-67' }} text-dark text-sm opacity-10"></i>
+                                </div>
+                                <span class="nav-link-text ms-1">{{ $mod['label'] ?? 'Module' }}</span>
+                            </a>
+                        @else
+                            <a class="nav-link text-danger" href="javascript:void(0)" title="Missing route: {{ $routeKey }}">
+                                <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="{{ $mod['icon'] ?? 'ni ni-bullet-list-67' }} text-dark text-sm opacity-10"></i>
+                                </div>
+                                <span class="nav-link-text ms-1">{{ $mod['label'] ?? 'Module' }}</span>
+                            </a>
+                        @endif
+                    </li>
+                @endif
             @endforeach
+
 
             {{-- ===================== /Dynamic Modules ===================== --}}
             <li class="nav-item mt-2">
@@ -339,4 +345,47 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const SIDEBAR_KEY = "sidebar_open_menu";
+            const accordions = document.querySelectorAll('[data-bs-toggle="collapse"]');
+
+            // Restore previously open accordion
+            const openId = localStorage.getItem(SIDEBAR_KEY);
+            if (openId) {
+                const el = document.querySelector(openId);
+                if (el) new bootstrap.Collapse(el, { toggle: true });
+            }
+
+            // Save opened accordion when clicked
+            accordions.forEach(link => {
+                link.addEventListener("click", function() {
+                    const target = this.getAttribute("href");
+                    const isOpen = document.querySelector(target)?.classList.contains("show");
+                    if (isOpen) {
+                        localStorage.removeItem(SIDEBAR_KEY);
+                    } else {
+                        localStorage.setItem(SIDEBAR_KEY, target);
+                    }
+                });
+            });
+
+            // Highlight active link based on current URL
+            const currentUrl = window.location.pathname;
+            document.querySelectorAll(".nav-link").forEach(link => {
+                const href = link.getAttribute("href");
+                if (href && currentUrl.startsWith(href)) {
+                    link.classList.add("active", "bg-gradient-primary", "text-white");
+                    // Open parent accordion if inside one
+                    const parentCollapse = link.closest(".collapse");
+                    if (parentCollapse && !parentCollapse.classList.contains("show")) {
+                        new bootstrap.Collapse(parentCollapse, { toggle: true });
+                        localStorage.setItem(SIDEBAR_KEY, "#" + parentCollapse.id);
+                    }
+                }
+            });
+        });
+    </script>
+
+
 </aside>

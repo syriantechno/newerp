@@ -2,32 +2,52 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\HR\Http\Controllers\EmployeesController;
-use Modules\HR\Http\Controllers\CompaniesController;
 
-Route::middleware(['web','auth'])
-    ->prefix('hr')
-    ->name('hr.')
+/*
+|--------------------------------------------------------------------------
+| HR Module Routes
+|--------------------------------------------------------------------------
+| All HR-related routes are grouped safely here with middleware protection.
+| This file isolates HR module behavior to prevent global route pollution.
+*/
+
+Route::middleware(['web', 'auth'])
+    ->prefix('hr/employees')
+    ->name('hr.employees.')
     ->group(function () {
-
-        Route::view('/', 'hr::index')->name('index');
-
-        // 🧱 Employees
-        Route::get('/employees', [EmployeesController::class, 'index'])->name('employees.index');
-        Route::post('/employees', [EmployeesController::class, 'store'])->name('employees.store');
-        Route::get('/employees/table', [EmployeesController::class, 'table'])->name('employees.table');
-        Route::get('/employees/{employee}', [EmployeesController::class, 'show'])->name('employees.show');
-        Route::put('/employees/{employee}', [EmployeesController::class, 'update'])->name('employees.update');
-        Route::delete('/employees/{employee}', [EmployeesController::class, 'destroy'])->name('employees.destroy');
-        Route::post('/employees/{employee}/documents', [EmployeesController::class, 'uploadDocument'])->name('employees.documents.upload');
-        Route::delete('/employees/{employee}/documents/{doc}', [EmployeesController::class, 'deleteDocument'])->name('employees.documents.delete');
-        Route::get('/employees/export/{type}', [EmployeesController::class, 'export'])->name('employees.export');
-
-        // 🏢 Companies
-        Route::get('/companies', [CompaniesController::class, 'index'])->name('companies.index');
-        Route::get('/companies/table', [CompaniesController::class, 'table'])->name('companies.table');
-        Route::post('/companies', [CompaniesController::class, 'store'])->name('companies.store');
-        Route::get('/companies/create', [CompaniesController::class, 'create'])->name('companies.create');
-        Route::delete('/companies/{company}', [CompaniesController::class, 'destroy'])->name('companies.destroy');
+        Route::get('/filter', [EmployeesController::class, 'filter'])->name('filter'); // AJAX
+        Route::get('/', [EmployeesController::class, 'index'])->name('index');
+        Route::get('/create', [EmployeesController::class, 'create'])->name('create');
+        Route::post('/', [EmployeesController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [EmployeesController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [EmployeesController::class, 'update'])->name('update');
+        Route::get('/{id}', [EmployeesController::class, 'show'])->name('show');
+        Route::delete('/{id}', [EmployeesController::class, 'destroy'])->name('destroy');
+        Route::get('/filter', [EmployeesController::class, 'filter'])->name('filter'); // AJAX
     });
 
+/*
+|--------------------------------------------------------------------------
+| Placeholder Routes for HR submodules
+|--------------------------------------------------------------------------
+| These are temporary views to test the sidebar accordion functionality.
+| They will be replaced later by their actual module controllers.
+*/
 
+Route::middleware(['web', 'auth'])
+    ->prefix('hr')
+    ->group(function () {
+        Route::view('/attendance', 'hr::placeholder')->name('hr.attendance.index');
+        Route::view('/leaves', 'hr::placeholder')->name('hr.leaves.index');
+        Route::view('/penalties', 'hr::placeholder')->name('hr.penalties.index');
+        Route::view('/evaluations', 'hr::placeholder')->name('hr.evaluations.index');
+        Route::view('/departments', 'hr::placeholder')->name('hr.departments.index');
+        Route::view('/designations', 'hr::placeholder')->name('hr.designations.index');
+        Route::view('/companies', 'hr::placeholder')->name('hr.companies.index');
+        Route::view('/shifts', 'hr::placeholder')->name('hr.shifts.index');
+
+
+    });
+
+// Safe debug output for confirmation
+print("[DEBUG] HR module routes loaded successfully.\n");

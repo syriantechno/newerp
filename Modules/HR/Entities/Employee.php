@@ -24,4 +24,17 @@ class Employee extends Model
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
+
+    public function department()
+    {
+        return $this->belongsTo(\Modules\HR\Entities\Department::class, 'department_id');
+    }
+
+    public function designation()
+    {
+        return $this->belongsTo(\Modules\HR\Entities\Designation::class, 'designation_id');
+    }
+
+
+
 }

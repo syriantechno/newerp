@@ -41,6 +41,8 @@
             <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
             <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css" rel="stylesheet" />
             <link id="pagestyle" href="{{ asset('assets/css/soft-ui-dashboard.css?v=1.0.3') }}" rel="stylesheet" />
+            <link id="pagestyle" href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" />
+
 
         </head>
 
@@ -134,20 +136,23 @@
                 console.log('🔊 Audio unlocked');
             }, { once: true });
 
-            async function checkNotifications() {
+             async function checkNotifications() {
                 try {
-                    const res = await fetch(`/notifications/check?last_id=${lastNotificationId}`);
-                    const data = await res.json();
-                    if (data.new) {
-                        await sound.play();
-                        lastNotificationId = data.id;
-                        localStorage.setItem('last_notification_id', data.id);
-                        console.log('🔔 New notification:', data.title);
-                    }
+                    const res = await fetch('/notifications/check');
+                    const text = await res.text();
+
+                    // نحذف أي أسطر Debug قبل JSON
+                    const clean = text.replace(/^\[DEBUG\][\s\S]*?\{/, '{');
+                    const data = JSON.parse(clean);
+
+                    // أكمل منطقك هنا
+                    // console.log('Notifications:', data);
                 } catch (err) {
-                    console.error('Notification check failed:', err);
+                    console.warn('Notification check skipped (non-JSON or debug text):', err);
                 }
             }
+            setInterval(checkNotifications, 15000);
+
 
             setInterval(checkNotifications, 5000);
         </script>
