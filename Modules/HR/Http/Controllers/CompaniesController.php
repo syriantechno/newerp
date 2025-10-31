@@ -52,4 +52,6 @@ class CompaniesController extends Controller
         $company->delete();
         return response()->json(['message' => 'Company deleted successfully']);
     }
+
+
 }

@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Modules\HR\Http\Controllers\EmployeesController;
 use Modules\HR\Http\Controllers\AttendanceController;
 use Modules\HR\Http\Controllers\DepartmentController;
+use Modules\HR\Http\Controllers\CompaniesController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -45,11 +47,15 @@ Route::middleware(['web', 'auth'])
         Route::view('/evaluations', 'hr::placeholder')->name('hr.evaluations.index');
         Route::view('/departments', 'hr::placeholder')->name('hr.departments.index');
         Route::view('/designations', 'hr::placeholder')->name('hr.designations.index');
-        Route::view('/companies', 'hr::placeholder')->name('hr.companies.index');
         Route::view('/shifts', 'hr::placeholder')->name('hr.shifts.index');
         Route::resource('departments', DepartmentController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->names('hr.departments');
+        Route::get('companies/table', [CompaniesController::class, 'table'])
+            ->name('hr.companies.table');
+        Route::resource('companies', CompaniesController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->names('hr.companies');
 
 
     });

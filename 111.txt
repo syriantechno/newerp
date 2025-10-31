@@ -84,3 +84,4 @@ index 1234567..89abcde 100644
 +    return redirect()
 +        ->route('approvals.show', $id)
 +        ->with('success', msg('approvals.action_recorded'));
+\DB::select('SHOW COLUMNS FROM hr_employees');

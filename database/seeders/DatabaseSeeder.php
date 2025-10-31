@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Database\Seeders\UserSeeder;
-use Database\Seeders\SystemModuleSeeder; // ✅ أضف هذا السطر
+
+// ✅ أضف هذا السطر
 
 class DatabaseSeeder extends Seeder
 {
