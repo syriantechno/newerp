@@ -174,33 +174,25 @@
                         <p class="text-sm text-muted">Configure audio alerts, email preferences, and notification behavior.</p>
                     </div>
                     <div class="card-body p-4 d-none" id="settings-section-users">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0"><i class="ni ni-single-02 text-info me-2"></i> Users & Roles</h5>
-                            <a href="{{ route('settings.roles.index') }}" class="btn btn-outline-primary btn-sm">
-                                ⚙️ Manage Roles
-                            </a>
-                        </div>
-
-                        <p class="text-sm text-muted mb-3">
-                            View all system users and assign roles directly.
+                        <h5 class="mb-3"><i class="ni ni-single-02 text-info me-2"></i> Users & Roles</h5>
+                        <p class="text-sm text-muted">
+                            View users and manage role assignments.
+                            For creating roles or managing permissions, please use the <strong>Roles Management</strong> and <strong>Permissions Matrix</strong> pages.
                         </p>
 
                         @php
                             use App\Models\User;
-                            use App\Models\Role;
                             $users = User::with('roles')->orderBy('id')->get();
-                            $roles = Role::orderBy('name')->get();
                         @endphp
 
-                        <div class="table-responsive">
+                        <div class="table-responsive mt-3">
                             <table class="table table-hover align-middle">
                                 <thead class="bg-light">
                                 <tr>
                                     <th>ID</th>
                                     <th>Name</th>
                                     <th>Email</th>
-                                    <th>Current Role</th>
-                                    <th class="text-end">Assign Role</th>
+                                    <th>Role(s)</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -218,33 +210,22 @@
                                                 @endforeach
                                             @endif
                                         </td>
-                                        <td class="text-end">
-                                            <form method="POST" action="{{ route('settings.users.assignRole') }}" class="d-flex justify-content-end gap-2">
-                                                @csrf
-                                                <input type="hidden" name="user_id" value="{{ $u->id }}">
-                                                <select name="role_id" class="form-select form-select-sm w-auto">
-                                                    @foreach($roles as $r)
-                                                        <option value="{{ $r->id }}" {{ $u->roles->contains('id', $r->id) ? 'selected' : '' }}>
-                                                            {{ $r->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                <button type="submit" class="btn btn-sm btn-success">Assign</button>
-                                            </form>
-                                        </td>
                                     </tr>
                                 @endforeach
                                 </tbody>
                             </table>
                         </div>
 
-                        <hr>
-                        <div class="text-end">
-                            <a href="{{ route('settings.permissions.matrix') }}" class="btn btn-outline-success btn-sm">
+                        <div class="d-flex justify-content-end mt-3">
+                            <a href="{{ route('settings.roles.index') }}" class="btn btn-outline-primary btn-sm">
+                                ⚙️ Manage Roles
+                            </a>
+                            <a href="{{ route('settings.permissions.matrix') }}" class="btn btn-outline-success btn-sm ms-2">
                                 🔐 Permissions Matrix
                             </a>
                         </div>
                     </div>
+
                     <div class="card-body p-4 d-none" id="settings-section-appearance">
                         <h5><i class="ni ni-palette text-danger me-2"></i> Appearance</h5>
                         <p class="text-sm text-muted">Theme and layout customization options.</p>

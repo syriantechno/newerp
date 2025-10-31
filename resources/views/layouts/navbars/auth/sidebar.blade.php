@@ -315,12 +315,15 @@
                     <span class="nav-link-text ms-1">Sign Up</span>
                 </a>
             </li>
-            <li class="nav-link mb-0">
-                <a href="https://www.creative-tim.com/product/soft-ui-dashboard-pro-laravel"
-                   class="btn btn-primary btn-md active px-5 text-white" target="_blank" role="button"
-                   aria-pressed="true">
-                    Upgrade to PRO</a>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('settings*') ? 'active' : '' }}" href="{{ route('settings.index') }}">
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="ni ni-settings text-dark text-sm opacity-10"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Settings</span>
+                </a>
             </li>
+
         </ul>
     </div>
     <div class="sidenav-footer mx-3 ">
