@@ -24,4 +24,11 @@
         </main>
         @include('components.fixed-plugin')
     @endif
+    @stack('scripts')
 @endsection
+
+
+
+
+
+

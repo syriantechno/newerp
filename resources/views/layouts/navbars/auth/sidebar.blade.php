@@ -84,50 +84,43 @@
                 </a>
             </li>
             {{-- ===================== Dynamic Modules (Auto Detection) ===================== --}}
+
             @php
-                use App\Models\ModuleSetting;
-                use App\Services\SyncModulesService;
-
-                // جرّب قراءة الموديولات من قاعدة البيانات أولاً
-                $autoModules = ModuleSetting::where('active', true)
-                    ->orderBy('order')
-                    ->get(['name', 'label', 'icon', 'route']);
-
-                // ✅ إذا الجدول فاضي (أول تشغيل أو بعد حذف)
-                if ($autoModules->isEmpty()) {
-                    try {
-                        // شغّل المزامنة التلقائية
-                        \App\Services\SyncModulesService::sync();
-
-                        // أعد القراءة بعد المزامنة
-                        $autoModules = ModuleSetting::where('active', true)
-                            ->orderBy('order')
-                            ->get(['name', 'label', 'icon', 'route']);
-                    } catch (\Throwable $e) {
-                        $autoModules = collect();
-                    }
-                }
+                use Illuminate\Support\Facades\Route as RouteFacade;
+                use Illuminate\Support\Str;
             @endphp
 
+            @foreach(($autoModules ?? []) as $mod)
+                @php
+                    // استخرج الاسم بأمان من المصفوفة أو الكائن
+                    $rawRoute = $mod['route'] ?? ($mod->route ?? '');
+                    $routeKey = (string) Str::of($rawRoute)->trim();
 
+                    // تحقّق إن المسار فعلاً موجود
+                    $routeExists = RouteFacade::has($routeKey);
+                @endphp
 
-        @if(count($autoModules))
-                <li class="nav-item mt-2">
-                    <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Modules</h6>
-                </li>
-
-                @foreach($autoModules as $mod)
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs($mod['route']) ? 'active' : '' }}"
-                           href="{{ route($mod['route']) }}">
+                <li class="nav-item">
+                    @if($routeExists)
+                        <a class="nav-link {{ request()->routeIs($routeKey) ? 'active' : '' }}"
+                           href="{{ route($routeKey) }}">
                             <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
-                                <i class="{{ $mod['icon'] }} text-dark text-sm opacity-10"></i>
+                                <i class="{{ $mod['icon'] ?? 'ni ni-bullet-list-67' }} text-dark text-sm opacity-10"></i>
                             </div>
-                            <span class="nav-link-text ms-1">{{ $mod['label'] }}</span>
+                            <span class="nav-link-text ms-1">{{ $mod['label'] ?? 'Module' }}</span>
                         </a>
-                    </li>
-                @endforeach
-            @endif
+                    @else
+                        {{-- إذا ما وُجد المسار، لا تكسر الصفحة --}}
+                        <a class="nav-link text-danger" href="javascript:void(0)" title="Missing route: {{ $routeKey }}">
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="{{ $mod['icon'] ?? 'ni ni-bullet-list-67' }} text-dark text-sm opacity-10"></i>
+                            </div>
+                            <span class="nav-link-text ms-1">{{ $mod['label'] ?? 'Module' }}</span>
+                        </a>
+                    @endif
+                </li>
+            @endforeach
+
             {{-- ===================== /Dynamic Modules ===================== --}}
             <li class="nav-item mt-2">
                 <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Example pages</h6>

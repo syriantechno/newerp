@@ -22,7 +22,10 @@ class SidebarServiceProvider extends ServiceProvider
                 $modules = collect();
             }
 
-            $view->with('modules', $modules);
+            $view->with([
+                'modules' => $modules,
+                'autoModules' => $modules,
+            ]);
         });
     }
 }

@@ -2,116 +2,149 @@
 
 namespace Modules\HR\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Storage;
-use Modules\HR\Models\{Employee, Document, Company, Department, Designation};
-use Modules\HR\Http\Requests\EmployeeRequest;
+use Illuminate\Support\Facades\Validator;
+use Modules\HR\Models\Employee;
+use Modules\HR\Models\Department;
+use Modules\HR\Models\Designation;
 
 class EmployeesController extends Controller
 {
-    public function index(Request $req)
+    /**
+     * Display the main employees page.
+     */
+    public function index()
     {
         return view('hr::employees.index');
     }
 
-    public function table(Request $req)
+    /**
+     * Return JSON data for DataTable.
+     */
+    public function table()
     {
-        $q = Employee::query()
-            ->with(['company','department','designation'])
-            ->when($req->filled('status'), fn($x)=>$x->where('status',$req->status))
-            ->when($req->filled('company_id'), fn($x)=>$x->where('company_id',$req->company_id))
-            ->when($req->filled('search'), function($x) use ($req){
-                $s = '%'.$req->search.'%';
-                $x->where(function($y) use ($s){
-                    $y->where('name','like',$s)->orWhere('emp_code','like',$s)->orWhere('email','like',$s);
-                });
-            })
-            ->latest('id');
+        $employees = Employee::with(['department:id,name', 'designation:id,name'])
+            ->orderByDesc('id')
+            ->get();
 
-        $employees = $q->paginate(20);
-        return view('hr::employees._table', compact('employees'));
+        return response()->json(['data' => $employees]);
     }
 
-    public function store(EmployeeRequest $req)
+    /**
+     * Store a new employee via AJAX.
+     */
+    public function store(Request $request)
     {
-        $data = $req->validated();
-        if (isset($data['extra']) && is_string($data['extra'])) {
-            $json = json_decode($data['extra'], true);
-            $data['extra'] = $json ?: null;
+        $validator = Validator::make($request->all(), [
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:hr_employees,email',
+            'company_id'    => 'required|integer|exists:hr_companies,id',
+            'department_id' => 'nullable|integer',
+            'designation_id'=> 'nullable|integer',
+            'status'        => 'nullable|string',
+            'join_date'     => 'nullable|date',
+            'notes'         => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
         }
-        $emp = Employee::create($data);
-        return response()->json(['ok'=>true, 'id'=>$emp->id]);
-    }
 
-    public function show(Employee $employee)
-    {
-        $employee->load(['company','department','designation','documents']);
-        return response()->json($employee);
-    }
+        try {
+            // 🔹 توليد رقم موظف تلقائي فريد مثل EMP-0001
+            $lastId = \Modules\HR\Entities\Employee::max('id') ?? 0;
+            $empCode = 'EMP-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
 
-    public function update(EmployeeRequest $req, Employee $employee)
-    {
-        $data = $req->validated();
-        if (isset($data['extra']) && is_string($data['extra'])) {
-            $json = json_decode($data['extra'], true);
-            $data['extra'] = $json ?: null;
+            $employee = \Modules\HR\Entities\Employee::create([
+                'emp_code'      => $empCode, // ✅ توليد تلقائي
+                'name'          => $request->name,
+                'email'         => $request->email,
+                'company_id'    => $request->company_id,
+                'department_id' => $request->department_id,
+                'designation_id'=> $request->designation_id,
+                'status'        => $request->status ?? 'active',
+                'join_date'     => $request->join_date,
+                'notes'         => $request->notes,
+            ]);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Employee added successfully!',
+                'data'    => $employee,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('[EmployeeStore] '.$e->getMessage());
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Failed to save employee: '.$e->getMessage(),
+            ], 500);
+
+
+        \Log::error('[EmployeeStore] '.$e->getMessage());
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Failed to save employee: '.$e->getMessage(),
+            ], 500);
         }
-        $employee->update($data);
-        return response()->json(['ok'=>true]);
     }
 
+
+    /**
+     * Update an existing employee.
+     */
+    public function update(Request $request, Employee $employee)
+    {
+        $validator = Validator::make($request->all(), [
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:hr_employees,email,' . $employee->id,
+            'department_id' => 'nullable|integer',
+            'designation_id'=> 'nullable|integer',
+            'status'        => 'nullable|string',
+            'join_date'     => 'nullable|date',
+            'notes'         => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        $employee->update($validator->validated());
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Employee updated successfully',
+            'employee' => $employee
+        ]);
+    }
+
+    /**
+     * Delete an employee.
+     */
     public function destroy(Employee $employee)
     {
         $employee->delete();
-        return response()->json(['ok'=>true]);
-    }
 
-    public function uploadDocument(Request $req, Employee $employee)
-    {
-        $req->validate([
-            'type'=>'required|string',
-            'file'=>'required|file|max:10240',
-            'issued_at'=>'nullable|date',
-            'expires_at'=>'nullable|date',
-            'number'=>'nullable|string'
+        return response()->json([
+            'success' => true,
+            'message' => 'Employee deleted successfully'
         ]);
-
-        $path = $req->file('file')->store('hr/docs','public');
-        $employee->documents()->create([
-            'type'=>$req->type,
-            'file_path'=>$path,
-            'issued_at'=>$req->issued_at,
-            'expires_at'=>$req->expires_at,
-            'number'=>$req->number,
-        ]);
-
-        return response()->json(['ok'=>true]);
     }
 
-    public function deleteDocument(Employee $employee, Document $doc)
+    /**
+     * Return dropdown lists for Departments & Designations (used in modal)
+     */
+    public function dropdowns()
     {
-        abort_unless($doc->documentable_id === $employee->id && $doc->documentable_type === Employee::class, 404);
-        Storage::disk('public')->delete($doc->file_path);
-        $doc->delete();
-        return response()->json(['ok'=>true]);
-    }
-
-    public function export(string $type)
-    {
-        abort_unless(in_array($type,['csv']), 404);
-        $rows = Employee::with(['company','department','designation'])->get();
-
-        $csv = implode(",", ['ID','Code','Name','Email','Phone','Company','Department','Designation','Status'])."\n";
-        foreach($rows as $r){
-            $csv .= implode(",", [
-                $r->id, $r->emp_code, '"'.$r->name.'"', $r->email, $r->phone,
-                optional($r->company)->name, optional($r->department)->name, optional($r->designation)->name, $r->status
-            ])."\n";
-        }
-        return response($csv,200,[
-            'Content-Type'=>'text/csv',
-            'Content-Disposition'=>'attachment; filename=employees.csv'
+        return response()->json([
+            'departments'  => Department::select('id', 'name')->get(),
+            'designations' => Designation::select('id', 'name')->get(),
         ]);
     }
 }

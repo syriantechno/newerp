@@ -2,7 +2,7 @@
     "name": "HR",
     "label": "HR System",
     "icon": "ni ni-check-bold",
-    "route": "employees.index",
+    "route": "hr.employees.index",
     "active": true,
     "order": 1
 }
