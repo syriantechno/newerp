@@ -62,7 +62,7 @@
                     className: 'text-center',
                     render: row => `
                 <div class="table-actions">
-                    <i class="action-icon edit text-primary" data-id="${row.id}" title="Edit"></i>
+                    <i class="action-icon edit text-success" data-id="${row.id}" title="Edit"></i>
                     <i class="action-icon delete text-danger" data-id="${row.id}" title="Delete"></i>
                 </div>`
                 };

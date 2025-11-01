@@ -42,7 +42,9 @@ class EmployeesTable
                 'company' => $e->company->name ?? '-',
                 'department' => $e->department->name ?? '-',
                 'designation' => $e->designation->name ?? '-',
-                'status' => $e->status,
+                'status' => '<span class="badge bg-gradient-' .
+                    ($e->status === 'active' ? 'success' : 'secondary') .
+                    ' text-white">' . ucfirst($e->status) . '</span>',
             ];
         });
 

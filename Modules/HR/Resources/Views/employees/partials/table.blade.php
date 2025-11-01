@@ -12,7 +12,7 @@
         </span>
         </td>
         <td class="text-center">
-            <a href="{{ route('hr.employees.edit', $emp->id) }}" class="mx-2 text-secondary">
+            <a href="{{ route('hr.employees.edit', $emp->id) }}" class="mx-2 text-success">
                 <i class="fas fa-user-edit"></i>
             </a>
             <form action="{{ route('hr.employees.destroy', $emp->id) }}" method="POST" class="d-inline">

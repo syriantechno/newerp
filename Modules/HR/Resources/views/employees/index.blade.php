@@ -3,8 +3,8 @@
 @section('content')
     <div class="container-fluid py-4">
         <div class="container-fluid">
-            <div class="page-header min-height-200 border-radius-xl mt-4" style="background-image: url('../assets/img/curved-images/curved14.jpg'); background-position-y: 50%;">
-                <span class="bg-gradient-secondary mask"></span>
+            <div class="page-header min-height-200 border-radius-xl mt-4" style="background-image: url('../assets/img/curved-images/curved14.jpg'); background-position-y: 72%;">
+                <span class="bg-gradient-secondary" ></span>
             </div>
             <div class="card card-body blur shadow-blur mx-4 mt-n6">
                 <div class="row gx-4">
@@ -19,12 +19,44 @@
                                 Employees
                             </h5>
                         </div>
+                    <div class="col-lg-4 col-md-6 my-sm-auto ms-sm-auto me-sm-0 mx-auto mt-3 d-flex justify-content-end">
 
-                         <div class="col-lg-4 col-md-6 my-sm-auto ms-sm-auto me-sm-0 mx-auto mt-3 d-flex justify-content-end">
-                             <div class="nav-wrapper position-relative end-0">
-                                <a href="{{ route('hr.employees.create') }}" class="btn bg-gradient-info">+ Add Employee</a>
-                          </div>
-                         </div>
+                        <a href="{{ route('hr.employees.create') }}"
+                           data-bs-toggle="tooltip"
+                           data-bs-placement="top"
+                           title="Print"
+                           class=" d-flex align-items-center justify-content-center"
+                           style="width:40px; height:40px; border-radius:8px; padding:0; margin-right: 1em;">
+                            <img src="../assets/img/print.png"
+                                 alt="Export"
+                                 style="width:45px; height:45px;">
+                        </a>
+                        <a href="{{ route('hr.employees.create') }}"
+                           data-bs-toggle="tooltip"
+                           data-bs-placement="top"
+                           title="Export to Excel"
+                           class=" d-flex align-items-center justify-content-center"
+                           style="width:40px; height:40px; border-radius:8px; padding:0; margin-right: 1em;">
+                            <img src="../assets/img/export-excel.png"
+                                 alt="Export"
+                                 style="width:40px; height:40px;">
+                        </a>
+                        <a href="{{ route('hr.employees.create') }}"
+                           data-bs-toggle="tooltip"
+                           data-bs-placement="top"
+                           title="Export to PDF"
+                           class=" d-flex align-items-center justify-content-center"
+                           style="width:40px; height:40px; border-radius:8px; padding:0; margin-right: 1em;">
+                            <img src="../assets/img/export-pdf.png"
+                                 alt="Export"
+                                 style="width:40px; height:40px;">
+                        </a>
+
+                        <a href="{{ route('hr.employees.create') }}" class="btn bg-gradient-info btn-sm d-flex align-items-center">
+                            <i class="fas fa-plus me-1"></i> Add Employee
+                        </a>
+                    </div>
+
                      </div>
                 </div>
             </div>
@@ -154,6 +186,11 @@
                 reloadTable();
             });
         });
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+        })
     </script>
 @endpush
 
