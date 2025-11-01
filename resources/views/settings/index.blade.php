@@ -274,7 +274,7 @@
                     const button = tr.querySelector('.toggle-btn');
 
                     if (data.active) {
-                        badge.className = 'badge bg-success';
+                        badge.className = 'badge bg-gradient-success';
                         badge.textContent = 'Active';
                         button.className = 'btn btn-sm btn-outline-danger toggle-btn';
                         button.textContent = 'Disable';

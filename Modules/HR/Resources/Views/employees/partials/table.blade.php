@@ -7,7 +7,7 @@
         <td>{{ optional($emp->department)->name }}</td>
         <td>{{ optional($emp->designation)->name }}</td>
         <td class="text-center">
-        <span class="badge bg-{{ $emp->status === 'active' ? 'success' : 'secondary' }}">
+        <span class="badge bg-gradient-{{ $emp->status === 'active' ? 'success' : 'secondary' }}">
             {{ ucfirst($emp->status) }}
         </span>
         </td>

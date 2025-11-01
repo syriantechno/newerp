@@ -10,6 +10,7 @@ use Modules\HR\Entities\Employee;
 use Modules\HR\Entities\Company;
 use Modules\HR\Entities\Department;
 use Modules\HR\Entities\Designation;
+use Modules\HR\DataTables\EmployeesTable;
 
 class EmployeesController extends Controller
 {
@@ -98,6 +99,47 @@ class EmployeesController extends Controller
             'total' => $employees->total(),
         ]);
     }
+    public function table(Request $request)
+    {
+        $query = \Modules\HR\Models\Employee::with(['company', 'department', 'designation'])
+            ->select('id', 'name', 'email', 'status', 'company_id', 'department_id', 'designation_id');
+
+        if ($request->filled('company_id')) {
+            $query->where('company_id', $request->company_id);
+        }
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+        if ($request->filled('designation_id')) {
+            $query->where('designation_id', $request->designation_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%");
+            });
+        }
+
+        $employees = $query->latest()->get()->map(function ($e) {
+            return [
+                'id' => $e->id,
+                'name' => $e->name,
+                'email' => $e->email,
+                'company' => $e->company->name ?? '-',
+                'department' => $e->department->name ?? '-',
+                'designation' => $e->designation->name ?? '-',
+                'status' => $e->status,
+            ];
+        });
+
+        return response()->json(['data' => $employees]);
+    }
+
+
 
     public function create()
     {

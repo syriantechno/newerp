@@ -14,7 +14,7 @@
       <td>{{ $r->company->name ?? '-' }}</td>
       <td>{{ $r->department->name ?? '-' }}</td>
       <td>{{ $r->designation->name ?? '-' }}</td>
-      <td><span class="badge bg-{{ $r->status==='active'?'success':'secondary' }}">{{ $r->status }}</span></td>
+      <td><span class="badge bg-{{ $r->status==='active'?'gradient-success':'secondary' }}">{{ $r->status }}</span></td>
       <td class="text-end">
         <button class="btn btn-sm btn-outline-primary" data-action="edit" data-id="{{ $r->id }}">Edit</button>
         <button class="btn btn-sm btn-outline-danger" data-action="del" data-id="{{ $r->id }}">Delete</button>

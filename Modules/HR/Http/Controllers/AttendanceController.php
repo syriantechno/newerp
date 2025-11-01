@@ -33,6 +33,25 @@ class AttendanceController extends Controller
         ));
     }
 
+    public function table()
+    {
+        $records = \Modules\HR\Entities\Attendance::with(['employee', 'department', 'designation'])
+            ->select('id', 'employee_id', 'date', 'status', 'check_in', 'check_out')
+            ->latest()
+            ->get()
+            ->map(fn($a) => [
+                'id' => $a->id,
+                'employee' => $a->employee->name ?? '-',
+                'date' => $a->date,
+                'status' => ucfirst(str_replace('_', ' ', $a->status)),
+                'check_in' => $a->check_in,
+                'check_out' => $a->check_out,
+            ]);
+
+        return response()->json(['data' => $records]);
+    }
+
+
     public function filter(Request $request)
     {
         Log::debug('[DEBUG] Attendance@filter called (AJAX)', $request->all());

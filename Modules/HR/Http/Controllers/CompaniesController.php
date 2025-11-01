@@ -22,6 +22,8 @@ class CompaniesController extends Controller
 
     public function store(Request $request)
     {
+        logger('[AJAX TEST] store() called', $request->all());
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'trade_license' => 'nullable|string|max:255',
@@ -29,18 +31,19 @@ class CompaniesController extends Controller
         ]);
 
         if ($validator->fails()) {
+            logger('[AJAX TEST] Validation failed', $validator->errors()->toArray());
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $company = Company::create([
-            'name' => $request->name,
-            'trade_license' => $request->trade_license,
-            'vat_number' => $request->vat_number,
-        ]);
+        $company = Company::create($validator->validated());
+        logger('[AJAX TEST] Company stored successfully', ['id' => $company->id]);
 
-        logger('✅ [HR] Company added: '.$company->name);
-        return response()->json(['message' => 'Company added successfully', 'data' => $company]);
+        return response()->json([
+            'message' => 'Company added successfully',
+            'data' => $company
+        ], 200);
     }
+
 
     public function destroy($id)
     {

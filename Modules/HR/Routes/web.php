@@ -19,7 +19,8 @@ Route::middleware(['web', 'auth'])
     ->prefix('hr/employees')
     ->name('hr.employees.')
     ->group(function () {
-        Route::get('/filter', [EmployeesController::class, 'filter'])->name('filter'); // AJAX
+        Route::get('/table', [EmployeesController::class, 'table'])->name('table');
+        Route::get('/filter', [EmployeesController::class, 'filter'])->name('hr.employees.table'); // AJAX
         Route::get('/', [EmployeesController::class, 'index'])->name('index');
         Route::get('/create', [EmployeesController::class, 'create'])->name('create');
         Route::post('/', [EmployeesController::class, 'store'])->name('store');
@@ -27,7 +28,8 @@ Route::middleware(['web', 'auth'])
         Route::put('/{id}', [EmployeesController::class, 'update'])->name('update');
         Route::get('/{id}', [EmployeesController::class, 'show'])->name('show');
         Route::delete('/{id}', [EmployeesController::class, 'destroy'])->name('destroy');
-        Route::get('/filter', [EmployeesController::class, 'filter'])->name('filter'); // AJAX
+
+
     });
 
 /*
@@ -45,7 +47,8 @@ Route::middleware(['web', 'auth'])
         Route::view('/leaves', 'hr::placeholder')->name('hr.leaves.index');
         Route::view('/penalties', 'hr::placeholder')->name('hr.penalties.index');
         Route::view('/evaluations', 'hr::placeholder')->name('hr.evaluations.index');
-        Route::view('/departments', 'hr::placeholder')->name('hr.departments.index');
+        Route::get('departments/table', [DepartmentController::class, 'table'])->name('hr.departments.table');
+        Route::resource('departments', DepartmentController::class)->only(['index', 'store', 'update', 'destroy'])->names('hr.departments');
         Route::view('/designations', 'hr::placeholder')->name('hr.designations.index');
         Route::view('/shifts', 'hr::placeholder')->name('hr.shifts.index');
         Route::resource('departments', DepartmentController::class)
@@ -58,6 +61,7 @@ Route::middleware(['web', 'auth'])
             ->names('hr.companies');
 
 
+
     });
 Route::middleware(['web','auth'])
     ->prefix('hr/attendance')
@@ -68,7 +72,8 @@ Route::middleware(['web','auth'])
         Route::post('/mark',   [AttendanceController::class, 'mark'])->name('mark');
         Route::post('/import', [AttendanceController::class, 'import'])->name('import');
         Route::get('/export',  [AttendanceController::class, 'export'])->name('export');
+        Route::get('/table',   [AttendanceController::class, 'table'])->name('table');
     });
 
 // Safe debug output for confirmation
-print("[DEBUG] HR module routes loaded successfully.\n");
+

@@ -1,32 +1,3 @@
-{{--@extends('layouts.app')--}}
-
-{{--@section('auth')--}}
-{{--    @include('layouts.alerts')--}}
-
-{{--    @if(\Request::is('static-sign-up'))--}}
-{{--        @include('layouts.navbars.guest.nav')--}}
-{{--        @yield('content')--}}
-{{--        @include('layouts.footers.guest.footer')--}}
-
-{{--    @elseif (\Request::is('static-sign-in'))--}}
-{{--        @include('layouts.navbars.guest.nav')--}}
-{{--        @yield('content')--}}
-{{--        @include('layouts.footers.guest.footer')--}}
-
-{{--    @else--}}
-{{--        @include('layouts.navbars.auth.sidebar')--}}
-{{--        <main class="main-content position-relative max-height-vh-100 h-100 mt-1 border-radius-lg">--}}
-{{--            @include('layouts.navbars.auth.nav')--}}
-{{--            <div class="container-fluid py-4">--}}
-{{--                @yield('content')--}}
-{{--                @include('layouts.footers.auth.footer')--}}
-{{--            </div>--}}
-{{--        </main>--}}
-{{--        @include('components.fixed-plugin')--}}
-{{--    @endif--}}
-{{--    @stack('scripts')--}}
-{{--@endsection--}}
-
 @extends('layouts.app')
 
 @section('auth')
@@ -50,54 +21,53 @@
             @include('layouts.navbars.auth.nav')
 
             <div class="container-fluid py-4">
-                {{-- PJAX Content Container --}}
                 <div id="main-content">
                     @yield('content')
                 </div>
-
                 @include('layouts.footers.auth.footer')
             </div>
         </main>
 
         @include('components.fixed-plugin')
     @endif
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    {{-- ====== Stack for page-level scripts ====== --}}
-    @stack('scripts')
 
-    {{-- ========================================= --}}
-    {{-- PJAX Loader to keep sidebar static        --}}
-    {{-- ========================================= --}}
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery-pjax@2.0.1/jquery.pjax.min.js"></script>
 
+    {{-- 🧩 Disable PJAX completely (to prevent console errors) --}}
     <script>
-        $(document).ready(function() {
-            // Activate PJAX for all internal sidebar links
-            $(document).pjax('.nav-link[href^="/"], .nav-link[href^="{{ url('') }}"]', '#main-content', {
-                timeout: 4000,
-                fragment: '#main-content'
-            });
+        if (typeof $.fn.pjax === "undefined") {
+            $.fn.pjax = function() { return this; };
+        }
+    </script>
 
-            // Scroll to top after PJAX load
-            $(document).on('pjax:end', function() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
+    {{-- ==========================================================
+ | Global JS/CSS for all Soft-UI Tables (unified setup)
+ |========================================================== --}}
+    <!-- ✅ jQuery must load first -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-            // Prevent PJAX for external links or ones with no-pjax class
-            $(document).on('click', '.nav-link.no-pjax', function(e) {
-                e.preventDefault();
-                window.location.href = $(this).attr('href');
-            });
+    <!-- ✅ DataTables Core + Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- ✅ SweetAlert2 + Toastr -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
+
+    <!-- ✅ Optional: Small delay to ensure jQuery is ready -->
+    <script>
+        window.addEventListener('load', () => {
+            console.log("✅ [Soft-UI Global] jQuery loaded version:", $.fn.jquery);
         });
     </script>
 
+
+    {{-- ====== Stack for page-level scripts ====== --}}
+
+
+    {{-- Optional: small debug print to confirm --}}
+    <script>console.log("✅ [Soft-UI Auth Layout] Ready — jQuery version:", $.fn.jquery);</script>
+    @stack('scripts')
 @endsection
-
-
-
-
-
-
-

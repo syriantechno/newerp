@@ -3,91 +3,71 @@
 namespace Modules\HR\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
-use App\Http\Controllers\Controller as BaseController;
-use Modules\HR\Models\Department;
+use Illuminate\Routing\Controller;
+use Modules\HR\Entities\Department;
+use Modules\HR\Entities\Company;
+use Illuminate\Support\Facades\Validator;
 
-class DepartmentController extends BaseController
+class DepartmentController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        // Debug prints for safe testing
-        Log::info('[Departments] index called', ['q' => $request->all()]);
-
-        $filters = [
-            'search'     => $request->string('search')->toString(),
-            'status'     => $request->string('status')->toString(),
-            'company_id' => $request->input('company_id'),
-            'parent_id'  => $request->input('parent_id'),
-        ];
-
-        $departments = Department::withCount('employees')
-            ->with(['parent', 'manager'])
-            ->filter($filters)
-            ->orderBy('name')
-            ->paginate(15)
-            ->appends($request->query());
-
-        // For parent dropdown
-        $allDepartments = Department::orderBy('name')->get(['id','name','parent_id']);
-        $managers = \Modules\HR\Models\Employee::orderBy('name')->get(['id','name']); // optional
-
-        return view('hr::departments.index', compact('departments', 'filters', 'allDepartments', 'managers'));
+        $companies = Company::select('id', 'name')->get();
+        return view('hr::departments.index', compact('companies'));
     }
+
+    public function table()
+    {
+        $departments = Department::with('company')->latest()->get();
+        return response()->json(['data' => $departments]);
+    }
+
+//    public function table()
+//    {
+//        $departments = Department::latest()->get();
+//        return response()->json(['data' => $departments]);
+//    }
+
 
     public function store(Request $request)
     {
-        Log::info('[Departments] store called', ['payload' => $request->all()]);
-
-        $data = $request->validate([
-            'name'        => ['required','string','max:190'],
-            'code'        => ['nullable','string','max:50'],
-            'description' => ['nullable','string'],
-            'company_id'  => ['nullable','integer'],
-            'parent_id'   => ['nullable','integer','different:id'],
-            'manager_id'  => ['nullable','integer'],
-            'status'      => ['required', Rule::in(['active','inactive'])],
+        $validator = Validator::make($request->all(), [
+            'name'        => 'required|string|max:255',
+            'code'        => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'status'      => 'required|in:active,inactive',
+            'company_id'  => 'required|exists:hr_companies,id',
         ]);
 
-        $data['created_by'] = auth()->id();
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        Department::create($data);
-
-        return redirect()->route('hr.departments.index')->with('success', 'Department created successfully.');
+        $department = Department::create($validator->validated());
+        return response()->json(['message' => 'Department added successfully', 'data' => $department]);
     }
 
     public function update(Request $request, Department $department)
     {
-        Log::info('[Departments] update called', ['id' => $department->id, 'payload' => $request->all()]);
-
-        $data = $request->validate([
-            'name'        => ['required','string','max:190'],
-            'code'        => ['nullable','string','max:50'],
-            'description' => ['nullable','string'],
-            'company_id'  => ['nullable','integer'],
-            'parent_id'   => ['nullable','integer','different:id'],
-            'manager_id'  => ['nullable','integer'],
-            'status'      => ['required', Rule::in(['active','inactive'])],
+        $validator = Validator::make($request->all(), [
+            'name'        => 'required|string|max:255',
+            'code'        => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'status'      => 'required|in:active,inactive',
+            'company_id'  => 'required|exists:hr_companies,id',
         ]);
 
-        $department->update($data);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        return redirect()->route('hr.departments.index')->with('success', 'Department updated successfully.');
+        $department->update($validator->validated());
+        return response()->json(['message' => 'Department updated successfully']);
     }
 
     public function destroy(Department $department)
     {
-        Log::info('[Departments] destroy called', ['id' => $department->id]);
-
-        if ($department->employees()->exists()) {
-            return redirect()
-                ->route('hr.departments.index')
-                ->with('error', 'Cannot delete department with assigned employees.');
-        }
-
         $department->delete();
-
-        return redirect()->route('hr.departments.index')->with('success', 'Department deleted successfully.');
+        return response()->json(['message' => 'Department deleted successfully']);
     }
 }

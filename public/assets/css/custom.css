@@ -17,3 +17,69 @@
     font-weight: 600;
     border-radius: 0.5rem;
 }
+div.dataTables_wrapper div.dataTables_info {
+    padding-top: .85em;
+    padding-left: 1em;
+}
+div.dataTables_wrapper div.dataTables_filter input {
+    margin-left: .5em;
+    display: inline-block;
+    width: auto;
+    margin-right: 1.5em;
+}
+
+div.dataTables_wrapper div.dataTables_paginate {
+
+    margin-right: 0.85em;
+}
+.table>thead {
+    vertical-align: bottom;
+    background-color: #e9e9e9fc;
+}
+/* ===================================================
+   (shared for all modules)
+   Clean + Non-italic version
+   =================================================== */
+
+.table-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+/* Base icon style */
+.action-icon {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-style: normal; /* ✅ remove italic */
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: #8392AB; /* Soft-UI neutral gray */
+    padding: 6px;
+    border-radius: 6px;
+    transition: transform 0.15s ease-in-out, color 0.15s ease-in-out;
+    background: none; /* ✅ no background */
+    border: none;
+}
+
+/* Hover states — only color + slight scale */
+.action-icon:hover {
+    transform: scale(1.15);
+}
+
+/* Edit icon (pencil) */
+.action-icon.edit::before {
+    content: "\f304"; /* fa-pen */
+}
+.action-icon.edit:hover {
+    color: #2DCE89; /* soft green */
+}
+
+/* Delete icon (trash) */
+.action-icon.delete::before {
+    content: "\f1f8"; /* fa-trash */
+}
+.action-icon.delete:hover {
+    color: #F5365C; /* soft red */
+}
