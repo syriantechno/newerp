@@ -22,7 +22,8 @@ class CompaniesController extends Controller
 
     public function store(Request $request)
     {
-        logger('[AJAX TEST] store() called', $request->all());
+//        logger('[AJAX TEST] store() called', $request->all());
+        logger('🔥 [COMPANY STORE CALLED ONCE] --- ' . now());
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
