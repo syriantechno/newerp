@@ -1,5 +1,6 @@
-body, html, * {
-    font-family: 'Poppins', 'Cairo', 'Tajawal', 'Roboto', sans-serif !important;
+/* ✅ Apply your font to everything EXCEPT icons */
+body, html, *:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not(i) {
+    font-family: 'Tajawal', 'Cairo', sans-serif !important;
 }
 
 /* === Sidebar Active Link Color === */
