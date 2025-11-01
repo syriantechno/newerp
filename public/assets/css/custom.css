@@ -1,3 +1,7 @@
+body, html, * {
+    font-family: 'Poppins', 'Cairo', 'Tajawal', 'Roboto', sans-serif !important;
+}
+
 /* === Sidebar Active Link Color === */
 .nav-link.active {
     background: linear-gradient(87deg, #e67e22 0%, #d35400 100%) !important;
